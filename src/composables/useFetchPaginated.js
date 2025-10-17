@@ -4,8 +4,7 @@ import { fetchEntity } from '../api/apiService'
 export function useFetchPaginated(endpoint) {
   const data = ref([])
   const loading = ref(false)
-  const pagination = ref({ page: 1, limit: 100
-    , total: 0 })
+  const pagination = ref({ page: 1, limit: 100, total: 0 })
   const filters = ref({})
 
   async function fetchPage(page = 1) {
