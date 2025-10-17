@@ -25,15 +25,12 @@ import FiltersPanel from '../components/FiltersPanel.vue'
 import Pagination from '../components/Pagination.vue'
 import LineChart from '../components/LineChart.vue'
 
-// 📦 API: /api/stocks
 const { data, pagination, filters, fetchPage, setFilters } = useFetchPaginated('/api/stocks')
 
-// 📅 Формат даты (только текущий день)
 const formatDate = (d) => d.toISOString().slice(0, 10)
 const today = new Date()
 filters.value = { dateFrom: formatDate(today), limit: 100 }
 
-// 📋 Столбцы таблицы
 const columns = [
   'nm_id',
   'supplier_article',
@@ -51,7 +48,6 @@ const columns = [
   'is_supply',
 ]
 
-// 🔹 Первый запрос
 fetchPage(1)
 
 function onApply(f) {
@@ -63,7 +59,6 @@ function changePage(p) {
   fetchPage(p)
 }
 
-// 📊 Данные для графика
 const chartLabels = computed(() => data.value.map((r, i) => r.warehouse_name || `#${i + 1}`))
 const chartSeries = computed(() => data.value.map((r) => +r.quantity || 0))
 </script>
