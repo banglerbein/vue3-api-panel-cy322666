@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <h2>Stocks</h2>
+  <div class="p-4 space-y-4">
+    <h2 class="text-2xl font-semibold">Stocks</h2>
 
     <FiltersPanel v-model="filters" @apply="onApply" />
 
@@ -25,14 +25,15 @@ import FiltersPanel from '../components/FiltersPanel.vue'
 import Pagination from '../components/Pagination.vue'
 import LineChart from '../components/LineChart.vue'
 
+// 📦 API: /api/stocks
 const { data, pagination, filters, fetchPage, setFilters } = useFetchPaginated('/api/stocks')
 
+// 📅 Формат даты (только текущий день)
 const formatDate = (d) => d.toISOString().slice(0, 10)
 const today = new Date()
-const sevenDaysAgo = new Date()
-sevenDaysAgo.setDate(today.getDate() - 7)
-filters.value = { dateFrom: formatDate(sevenDaysAgo), dateTo: formatDate(today), limit: 100 }
+filters.value = { dateFrom: formatDate(today), limit: 100 }
 
+// 📋 Столбцы таблицы
 const columns = [
   'nm_id',
   'supplier_article',
@@ -50,16 +51,19 @@ const columns = [
   'is_supply',
 ]
 
+// 🔹 Первый запрос
 fetchPage(1)
 
 function onApply(f) {
   setFilters(f)
   fetchPage(1)
 }
+
 function changePage(p) {
   fetchPage(p)
 }
 
-const chartLabels = computed(() => data.value.map((r) => r.last_change_date?.slice(0, 10)))
+// 📊 Данные для графика
+const chartLabels = computed(() => data.value.map((r, i) => r.warehouse_name || `#${i + 1}`))
 const chartSeries = computed(() => data.value.map((r) => +r.quantity || 0))
 </script>

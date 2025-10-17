@@ -1,16 +1,24 @@
 <template>
-  <div>
-    <h2>Orders</h2>
+  <div class="p-4 space-y-4">
+    <h2 class="text-2xl font-semibold">Orders</h2>
 
+    <!-- Панель фильтров -->
     <FiltersPanel
-      :modelValue="filters"
+      v-model="filters"
       @apply="onApply"
-      @update:modelValue="(f) => (filters = f)"
     />
 
-    <LineChart :labels="chartLabels" :series="chartSeries" title="Orders Totals" />
+    <!-- График -->
+    <LineChart
+      :labels="chartLabels"
+      :series="chartSeries"
+      title="Orders Total Price"
+    />
 
+    <!-- Таблица -->
     <DataTable :rows="data" :columns="columns" />
+
+    <!-- Пагинация -->
     <Pagination
       :page="pagination.page"
       :total="pagination.total"
@@ -20,79 +28,73 @@
   </div>
 </template>
 
-<script>
-import { ref, computed } from 'vue'
+<script setup>
+import { computed } from 'vue'
 import { useFetchPaginated } from '../composables/useFetchPaginated'
 import DataTable from '../components/DataTable.vue'
 import FiltersPanel from '../components/FiltersPanel.vue'
 import Pagination from '../components/Pagination.vue'
 import LineChart from '../components/LineChart.vue'
 
-export default {
-  components: { DataTable, FiltersPanel, Pagination, LineChart },
-  setup() {
-    const { data, pagination, filters, fetchPage, setFilters } = useFetchPaginated('/api/orders')
+// 📦 Composable для API-запросов
+const { data, pagination, filters, fetchPage, setFilters } = useFetchPaginated('/api/orders')
 
+// 🔹 Форматирование дат (Y-m-d)
+const formatDate = (d) => d.toISOString().slice(0, 10)
 
-    const formatDate = (d) => d.toISOString().slice(0, 10)
+// 🔹 Сегодня и 7 дней назад
+const today = new Date()
+const sevenDaysAgo = new Date()
+sevenDaysAgo.setDate(today.getDate() - 7)
 
-    const today = new Date()
-    const sevenDaysAgo = new Date()
-    sevenDaysAgo.setDate(today.getDate() - 7)
-
- 
-    filters.value = {
-      dateFrom: formatDate(sevenDaysAgo),
-      dateTo: formatDate(today),
-      limit: 100,
-    }
-
-    const columns = [
-      'barcode',
-      'brand',
-      'cancel_dt',
-      'category',
-      'date',
-      'discount_percent',
-      'g_number',
-      'income_id',
-      'is_cancel',
-      'last_change_date',
-      'nm_id',
-      'oblast',
-      'odid',
-      'subject',
-      'supplier_article',
-      'tech_size',
-      'total_price',
-      'warehouse_name',
-    ]
-
-    // 🔹 Первый запрос при загрузке страницы
-    fetchPage(1)
-
-    function onApply(f) {
-      setFilters(f)
-      fetchPage(1)
-    }
-
-    function changePage(p) {
-      fetchPage(p)
-    }
-
-    const chartLabels = computed(() => data.value.map((r) => r.created_at?.slice(0, 10)))
-    const chartSeries = computed(() => data.value.map((r) => +r.total || 0))
-
-    return {
-      data,
-      filters,
-      pagination,
-      columns,
-      onApply,
-      changePage,
-      chartLabels,
-      chartSeries,
-    }
-  },
+// 🔹 Значения фильтров по умолчанию
+filters.value = {
+  dateFrom: formatDate(sevenDaysAgo),
+  dateTo: formatDate(today),
+  limit: 100,
 }
+
+// 🔹 Столбцы таблицы
+const columns = [
+  'odid',
+  'date',
+  'supplier_article',
+  'tech_size',
+  'barcode',
+  'total_price',
+  'discount_percent',
+  'warehouse_name',
+  'region_name',
+  'brand',
+  'subject',
+  'is_cancel',
+  'cancel_dt',
+  'last_change_date',
+]
+
+// 🔹 Загружаем первую страницу при инициализации
+fetchPage(1)
+
+function onApply(f) {
+  setFilters(f)
+  fetchPage(1)
+}
+
+function changePage(p) {
+  fetchPage(p)
+}
+
+// 🔹 Подготовка данных для графика
+const chartLabels = computed(() =>
+  data.value.map((r) => r.date?.slice(0, 10))
+)
+const chartSeries = computed(() =>
+  data.value.map((r) => +r.total_price || 0)
+)
 </script>
+
+<style scoped>
+h2 {
+  margin-bottom: 1rem;
+}
+</style>
